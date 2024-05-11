@@ -1,0 +1,5 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "IRS_Common_Windows")(type "KiCad")(uri "C:/Users/azby/Proyectos/Kicad/Librerias/IRS_Common.pretty")(options "")(descr "")(disabled))
+  (lib (name "IRS_Common_Linux")(type "KiCad")(uri "/home/azby/Proyectos/Kicad/Librerias/IRS_Common.pretty")(options "")(descr ""))
+)
