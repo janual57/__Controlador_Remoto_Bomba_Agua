@@ -40,6 +40,7 @@ const char* _password = "SSID-PASSWORD";
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>   
 #include <ArduinoJson.h>
+#include "Timers.h"
 
 /*
  * Código de usuario
@@ -57,9 +58,11 @@ const char* _password = "SSID-PASSWORD";
  * Definición Variables
  */
 uint8_t rCursorPos = 0;
+uint32_t tiempoAutoApagado = 1200000;      //1200 milisegundos = 20 min para auto apagar la bomba
 char sGenMsg[] = "********************";
 char tempCbuffer[10] = "";
- 
+
+Timers timer; 
 /*
  * Configuración Sensor Temp 
  */
@@ -326,11 +329,29 @@ void setup() {
 
   // Set up the resolution for our sensors
   sensors.setResolution(12);
+
+/*
+ * Setup Timer
+ */
+  timer.start(tiempoAutoApagado); //time in ms
    
 }
 
 // the loop function runs over and over again forever
 void loop() {
+  /*
+   * Timer check
+   */
+  if (timer.available()) {
+    timer.stop();
+    if (output8State == "on"){
+      output8State = "off";
+      strcpy(sGenMsg, "BOMBA AGUA       OFF");
+      LCD2004_WriteSubLabel((uint8_t *)&sGenMsg);
+      digitalWrite(output8, LOW);
+    }
+  }
+  
   /*
    * Telegram Check
    */
@@ -365,6 +386,7 @@ void loop() {
       strcpy(sGenMsg, "BOMBA AGUA        ON");
       LCD2004_WriteSubLabel((uint8_t *)&sGenMsg);
       digitalWrite(output8, HIGH);
+      timer.start(tiempoAutoApagado);
     } 
     else if (output8State == "on"){
       output8State = "off";
@@ -458,6 +480,7 @@ void loop() {
               strcpy(sGenMsg, "RIEGO CESPED      ON");
               LCD2004_WriteMessage((uint8_t *)&sGenMsg);
               digitalWrite(output0, HIGH);
+              
               //digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)              
             } else if (header.indexOf("GET /0/off") >= 0) {
               //Serial.println("GPIO 4 off");
@@ -465,6 +488,7 @@ void loop() {
               strcpy(sGenMsg, "RIEGO PLANTAS     ON");
               LCD2004_WriteMessage((uint8_t *)&sGenMsg);              
               digitalWrite(output0, LOW);
+              
               //digitalWrite(LED_BUILTIN, LOW);   // turn the LED on (HIGH is the voltage level)
             } else if (header.indexOf("GET /8/on") >= 0) {
               //Serial.println("GPIO 4 on");
@@ -473,6 +497,7 @@ void loop() {
               //LCD2004_WriteMessage((uint8_t *)&sGenMsg);
               LCD2004_WriteSubLabel((uint8_t *)&sGenMsg);
               digitalWrite(output8, HIGH);
+              timer.start(tiempoAutoApagado);
               //digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
             } else if (header.indexOf("GET /8/off") >= 0) {
               //Serial.println("GPIO 4 off");
@@ -481,6 +506,7 @@ void loop() {
               strcpy(sGenMsg, "BOMBA AGUA       OFF"); 
               LCD2004_WriteSubLabel((uint8_t *)&sGenMsg);             
               digitalWrite(output8, LOW);
+              
               //digitalWrite(LED_BUILTIN, LOW);   // turn the LED on (HIGH is the voltage level)
             }
              //Serial.println("GPIO 4 on");
